@@ -8,14 +8,25 @@ import matplotlib.pyplot as plt
 import tqdm
 
 
+def count_bit_differences(binary_str1, binary_str2):
+    if len(binary_str1) != len(binary_str2):
+        raise ValueError("Binary strings must have the same length")
+
+    difference_count = 0
+    for bit1, bit2 in zip(binary_str1, binary_str2):
+        if bit1 != bit2:
+            difference_count += 1
+
+    return difference_count
+
 if __name__ == "__main__":
 
     vns = 6
     cns = 3
     n_txs = 100
-    max_SNR_per_bit = 1.3 # dB (Higher is better)
-    samples = 1000
-    decoding_iteration = 100
+    max_SNR_per_bit = 2
+    samples = 100
+    decoding_iteration = 200
 
     T = Tanner(vns, cns, adjmatr_file="ldpc_adjmatr.txt")
 
@@ -33,7 +44,9 @@ if __name__ == "__main__":
             codeword = codegen.Code("ldpc_adjmatr.txt").codeword()
             channel_LLRs = c.erasure_channel(u.BPSK(codeword), snr)
             # Decode the received mssage
-            errors = "".join(T.decode(channel_LLRs, max_iterations=decoding_iteration, visual=False)).count("?")
+            decoded = "".join(T.decode(channel_LLRs, max_iterations=decoding_iteration, visual=False))
+            original = "".join([str(int(c)) for c in codeword])
+            errors = count_bit_differences(decoded, original)
             wrong_bits.append(errors)
 
         bar.update()
@@ -46,7 +59,7 @@ if __name__ == "__main__":
     plt.semilogy(SNRs, BERs, label="BER")
     plt.xlabel('Eb/No')
     plt.ylabel('BER')
-    plt.ylim(10e-15, 1)
+    plt.ylim(10e-15, 10)
     plt.xlim(1, max_SNR_per_bit)
     plt.grid(True)
     plt.legend()

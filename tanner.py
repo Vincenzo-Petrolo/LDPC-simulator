@@ -12,7 +12,7 @@ class Tanner(object):
     def __init__(self, vns, cns, adjmatr_file=None, number_edges = None):
         if adjmatr_file:
             # Load the adjacency matrix from the file
-            adjacency_matrix = np.loadtxt(adjmatr_file, dtype=int)
+            self.adjacency_matrix = np.loadtxt(adjmatr_file, dtype=int)
             # Create a bipartite graph from the adjacency matrix
             self.T = nx.Graph()
 
@@ -21,7 +21,7 @@ class Tanner(object):
 
             for i in range(cns):
                 for j in range(vns):
-                    if adjacency_matrix[i, j] == 1:
+                    if self.adjacency_matrix[i, j] == 1:
                         self.T.add_edge(i + vns, j)
         else:
             self.T = bipartite.gnmk_random_graph(vns, cns, number_edges)
@@ -30,8 +30,8 @@ class Tanner(object):
         self.cns = cns
 
         # Create memory matrix to exchange messages
-        self.vns2cns = np.zeros(adjacency_matrix.shape)
-        self.cns2vns = np.zeros(adjacency_matrix.shape)
+        self.vns2cns = np.zeros(self.adjacency_matrix.shape)
+        self.cns2vns = np.zeros(self.adjacency_matrix.shape)
 
         vns = list(self.T.nodes)[:self.vns]
         cns = list(self.T.nodes)[self.vns:]
@@ -56,7 +56,7 @@ class Tanner(object):
         nx.draw(self.T, pos, with_labels=False, node_size=500, font_size=10)
 
         # Draw variable nodes with labels including LLR values
-        LLRs = [self.T.nodes[vn]["obj"].getLLR(self.cns2vns) for vn in vns]
+        LLRs = [self.T.nodes[vn]["obj"].getLLR(self.cns2vns, self.channel_LLRs[vn]) for vn in vns]
         messages = u.LLR2Binary(LLRs)
 
         vns_labels = {i : f'{LLRs[i] : .1f} {msg}' for i, msg in enumerate(messages)}
@@ -165,7 +165,7 @@ class Tanner(object):
     def parityCheck(self, cn):
         neighbors = self.T.neighbors(cn)
 
-        LLRs = [self.T.nodes[vn]["obj"].getLLR(self.cns2vns) for vn in neighbors]
+        LLRs = [self.T.nodes[vn]["obj"].getLLR(self.cns2vns, self.channel_LLRs[vn]) for vn in neighbors]
         sign = 1
 
         for llr in LLRs:
@@ -184,11 +184,16 @@ class Tanner(object):
         # First simulate the decoder behavior
         self.channel_LLRs = channel_LLRs
         self.simulate(channel_LLRs, max_iterations, visual=visual)
-
         # Gather the LLRs
-        LLRs = [node[1]["obj"].getLLR(self.cns2vns) for node in list(self.T.nodes(data=True))[:self.vns]]
+        LLRs = [node[1]["obj"].getLLR(self.cns2vns, self.channel_LLRs[node[0]]) for node in list(self.T.nodes(data=True))[:self.vns]]
 
         decoded_msg = u.LLR2Binary(LLRs)
 
+        self.reset()
+
         return decoded_msg
 
+    def reset(self):
+        # Create memory matrix to exchange messages
+        self.vns2cns = np.zeros(self.adjacency_matrix.shape)
+        self.cns2vns = np.zeros(self.adjacency_matrix.shape)

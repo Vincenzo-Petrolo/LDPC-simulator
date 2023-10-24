@@ -1,6 +1,5 @@
 class VariableNode(object):
     def __init__(self, node_id) -> None:
-        self.last_message = 0                                                # Last output message
         self.channel_LLR = 0
         self.node_id = node_id
         pass
@@ -12,12 +11,10 @@ class VariableNode(object):
             # Compute extrinsic information (subtract incoming message)
             out_messages[node] = sum(list(cn_messages.values())) + float(channel_LLR) - inmsg 
 
-        self.channel_LLR = channel_LLR
-
         return out_messages
     
-    def getLLR(self, last_messages : dict) -> float:
-        return sum(last_messages[:, self.node_id]) + self.channel_LLR
+    def getLLR(self, last_messages : dict, channelLLR) -> float:
+        return sum(last_messages[:, self.node_id]) + channelLLR 
 
 def sign(vn_messages : list):
     # Initialize a count variable for negative numbers
@@ -36,7 +33,6 @@ def sign(vn_messages : list):
 
 class CheckNode(object):
     def __init__(self) -> None:
-        self.last_message = 0
         self.alpha = 0.9
         pass
 
