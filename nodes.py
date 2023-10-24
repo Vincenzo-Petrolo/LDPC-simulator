@@ -1,15 +1,23 @@
 class VariableNode(object):
-    def __init__(self) -> None:
+    def __init__(self, node_id) -> None:
         self.last_message = 0                                                # Last output message
+        self.channel_LLR = 0
+        self.node_id = node_id
         pass
 
-    def compute_message(self, channel_LLR = None, cn_messages : list = None) -> float:
+    def compute_message(self, channel_LLR = None, cn_messages : dict = None) -> dict:
+        out_messages = {}
+        # For each check node compute the extrinsic information
+        for node, inmsg in cn_messages.items():
+            # Compute extrinsic information (subtract incoming message)
+            out_messages[node] = sum(list(cn_messages.values())) + float(channel_LLR) - inmsg 
 
-        # print(f"[Variable Node] Received: {cn_messages}, Channel LLR: {channel_LLR}")
-        self.last_message = sum(cn_messages) + float(channel_LLR)
-        # print(f"[Variable Node] Computed: {self.last_message:.2f}")
+        self.channel_LLR = channel_LLR
 
-        return self.last_message
+        return out_messages
+    
+    def getLLR(self, last_messages : dict) -> float:
+        return sum(last_messages[:, self.node_id]) + self.channel_LLR
 
 def sign(vn_messages : list):
     # Initialize a count variable for negative numbers
@@ -33,11 +41,11 @@ class CheckNode(object):
         pass
 
     
-    def compute_message(self, vn_messages : list = None) -> float:
+    def compute_message(self, vn_messages : dict = None) -> dict:
         # Uses MinSum algorithm
+        out_messages = {}
+        # Compute extrinsic information for each connected variable node
+        for node, item in vn_messages.items():
+            out_messages[node] = self.alpha * sign([value for key,value in vn_messages.items() if (key != node)]) * min([abs(llr) for key, llr in vn_messages.items() if (key != node)])
 
-        # print(f"[Check Node] Received: {vn_messages}")
-        self.last_message = self.alpha * sign(vn_messages) * min([abs(llr) for llr in vn_messages])
-        # print(f"[Check Node] Computed: {self.last_message:.2f}")
-
-        return self.last_message
+        return out_messages 

@@ -16,7 +16,7 @@ def erasure_channel(msg : list, ber : float) -> list:
 
     for i in range(len(msg)):
         if (random.uniform(0,1) <= ber):
-            out_msg.append(0)
+            out_msg.append(random.choice([-0.1, 0.1]))
         else:
             out_msg.append(msg[i])
 

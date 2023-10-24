@@ -29,12 +29,16 @@ class Tanner(object):
         self.vns = vns
         self.cns = cns
 
+        # Create memory matrix to exchange messages
+        self.vns2cns = np.zeros(adjacency_matrix.shape)
+        self.cns2vns = np.zeros(adjacency_matrix.shape)
+
         vns = list(self.T.nodes)[:self.vns]
         cns = list(self.T.nodes)[self.vns:]
 
         # Set up all the Variable nodes
         for vn in vns:
-            nx.set_node_attributes(self.T, values={vn: {"obj": VariableNode()}})
+            nx.set_node_attributes(self.T, values={vn: {"obj": VariableNode(node_id=vn)}})
 
         # Set up all the Check nodes
         for cn in cns:
@@ -52,7 +56,7 @@ class Tanner(object):
         nx.draw(self.T, pos, with_labels=False, node_size=500, font_size=10)
 
         # Draw variable nodes with labels including LLR values
-        LLRs = [self.T.nodes[vn]["obj"].last_message for vn in vns]
+        LLRs = [self.T.nodes[vn]["obj"].getLLR(self.cns2vns) for vn in vns]
         messages = u.LLR2Binary(LLRs)
 
         vns_labels = {i : f'{LLRs[i] : .1f} {msg}' for i, msg in enumerate(messages)}
@@ -71,17 +75,10 @@ class Tanner(object):
         # Parity check colors
         cns_node_colors = []
         
-        for cn in range(self.vns, self.vns+self.cns):
-            sign = 1
-            for n in list(nx.neighbors(self.T, cn)):
-                if (self.T.nodes(data=True)[n]["obj"].last_message == 0):
-                    sign = -1
-                    break
-                sign *= self.T.nodes(data=True)[n]["obj"].last_message / abs(self.T.nodes(data=True)[n]["obj"].last_message)
-
-            if (sign > 0):
+        for cn in range(self.vns, self.cns + self.vns):
+            if (self.parityCheck(cn)):
                 cns_node_colors.append("g")
-            elif (sign < 0):
+            else:
                 cns_node_colors.append("r")
 
         # Draw custom node shapes
@@ -113,14 +110,17 @@ class Tanner(object):
 
         return
     
-    def getNeighboorsMessages(self, node_id) -> list:
+    def getNeighboorsMessages(self, node_id) -> dict:
         neighboors = list(self.T.neighbors(node_id))
-        nodes = self.T.nodes(data=True)
+        messages = {}
 
-        messages = []
-
-        for n in neighboors:
-            messages.append(nodes[n]["obj"].last_message)
+        if (node_id < self.vns):
+            # Gather messages from check nodes
+            for n in neighboors:
+                messages[n-self.vns] = self.cns2vns[n-self.vns][node_id]
+        else:
+            for n in neighboors:
+                messages[n] = self.vns2cns[node_id - self.vns][n]
 
         return messages
 
@@ -130,10 +130,10 @@ class Tanner(object):
 
         for i, vn in enumerate(vns):
             cns_messages = self.getNeighboorsMessages(vn)
-            if (channel_LLRs):
-                nodes[vn]["obj"].compute_message(channel_LLRs[i], cns_messages)
-            else:
-                nodes[vn]["obj"].compute_message(0.0, cns_messages)
+            out_msgs = nodes[vn]["obj"].compute_message(channel_LLRs[i], cns_messages)
+
+            for node, out_msg in out_msgs.items():
+                self.vns2cns[node][i] = out_msg
 
         return
 
@@ -143,29 +143,45 @@ class Tanner(object):
 
         for i, cn in enumerate(cns):
             vns_messages = self.getNeighboorsMessages(cn)
-            nodes[cn]["obj"].compute_message(vns_messages)
+            out_msgs = nodes[cn]["obj"].compute_message(vns_messages)
+
+            for node, out_msg in out_msgs.items():
+                self.cns2vns[i][node] = out_msg
 
         return
     
     def checkDone(self) -> bool:
-        for cn in range(self.vns, self.vns+self.cns):
-            sign = 1
-            for n in list(nx.neighbors(self.T, cn)):
-                if (not self.T.nodes(data=True)[n]["obj"].last_message):
-                    return False
-                sign *= self.T.nodes(data=True)[n]["obj"].last_message / abs(self.T.nodes(data=True)[n]["obj"].last_message)
-
-            if (sign < 0):
+        for cn in range(self.vns, self.cns + self.vns):
+            if (not self.parityCheck(cn)):
                 return False
+
+        return True
+    
+    def parityCheck(self, cn):
+        neighbors = self.T.neighbors(cn)
+
+        LLRs = [self.T.nodes[vn]["obj"].getLLR(self.cns2vns) for vn in neighbors]
+        sign = 1
+
+        for llr in LLRs:
+            if (llr < -0.1):
+                sign *= -1
+            
+            if (abs(llr) < 0.1):
+                return False
+
+        if (sign < 0 or sum(LLRs) == 0):
+            return False
 
         return True
     
     def decode(self, channel_LLRs : list, max_iterations = 100) -> list:
         # First simulate the decoder behavior
+        self.channel_LLRs = channel_LLRs
         self.simulate(channel_LLRs, max_iterations)
 
         # Gather the LLRs
-        LLRs = [node[1]["obj"].last_message for node in list(self.T.nodes(data=True))[:self.vns]]
+        LLRs = [node[1]["obj"].getLLR(self.cns2vns) for node in list(self.T.nodes(data=True))[:self.vns]]
 
         decoded_msg = u.LLR2Binary(LLRs)
 

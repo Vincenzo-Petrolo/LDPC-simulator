@@ -19,8 +19,8 @@ def BPSK(codeword : list) -> list:
 
     for c in codeword:
         if (c == 1):
-            bpsk.append(-1*random.uniform(1,10))
+            bpsk.append(-1)
         else:
-            bpsk.append(1*random.uniform(1,10))
+            bpsk.append(1)
     
     return bpsk
