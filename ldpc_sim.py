@@ -24,8 +24,8 @@ if __name__ == "__main__":
     vns = 6
     cns = 3
     n_txs = 1000
-    max_SNR_per_bit = 5
-    samples = 1000
+    max_SNR_per_bit = 2
+    samples = 100
     decoding_iteration = 10
 
     T = Tanner(vns, cns, adjmatr_file="ldpc_adjmatr.txt")
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         
         BERs.append(avg_ber)
     
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(6, 4))
     plt.semilogy(SNRs, BERs, label="BER")
     plt.xlabel('Eb/No')
     plt.ylabel('BER')
