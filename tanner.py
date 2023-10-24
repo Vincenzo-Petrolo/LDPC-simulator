@@ -90,11 +90,12 @@ class Tanner(object):
         plt.title(title, fontsize=12)
 
 
-    def simulate(self, initial_LLRs : list, max_iterations : int) -> None:
+    def simulate(self, initial_LLRs : list, max_iterations : int, visual : bool) -> None:
         # Create the figure
-        fig, ax = plt.subplots()
+        if (visual):
+            fig, ax = plt.subplots()
 
-        def update(iteration):
+        def update(iteration, visual = None):
             if (self.checkDone()):
                 return
 
@@ -102,13 +103,17 @@ class Tanner(object):
             self.updateVNS(initial_LLRs)
             # Second phase: Update CNS
             self.updateCNS()
-            
-            self.show(iteration)
 
-        anim = FuncAnimation(fig, func=update, frames=max_iterations, repeat=False, init_func=None)
-        plt.show()
+            if (visual):
+                self.show(iteration)
+        
+        if (visual == True):
+            anim = FuncAnimation(fig, func=update, frames=max_iterations, repeat=False, init_func=None, fargs=(visual,))
+            plt.show()
+        else:
+            for i in range(max_iterations):
+                update(i, visual)
 
-        return
     
     def getNeighboorsMessages(self, node_id) -> dict:
         neighboors = list(self.T.neighbors(node_id))
@@ -164,10 +169,10 @@ class Tanner(object):
         sign = 1
 
         for llr in LLRs:
-            if (llr < -0.1):
+            if (llr < -0.2):
                 sign *= -1
             
-            if (abs(llr) < 0.1):
+            if (abs(llr) <= 0.2):
                 return False
 
         if (sign < 0 or sum(LLRs) == 0):
@@ -175,10 +180,10 @@ class Tanner(object):
 
         return True
     
-    def decode(self, channel_LLRs : list, max_iterations = 100) -> list:
+    def decode(self, channel_LLRs : list, max_iterations = 100, visual = True) -> list:
         # First simulate the decoder behavior
         self.channel_LLRs = channel_LLRs
-        self.simulate(channel_LLRs, max_iterations)
+        self.simulate(channel_LLRs, max_iterations, visual=visual)
 
         # Gather the LLRs
         LLRs = [node[1]["obj"].getLLR(self.cns2vns) for node in list(self.T.nodes(data=True))[:self.vns]]

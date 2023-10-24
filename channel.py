@@ -1,7 +1,14 @@
 import random
+import math
 
-def flip_channel(msg : list, ber : float) -> list:
+def SNR2ber(snr : float):
+    # Higher SNR -> extremely low bit error rate
+    return math.exp(-2*(snr-1))
+
+def flip_channel(msg : list, snr : float) -> list:
     out_msg = []
+
+    ber = SNR2ber(snr)
 
     for i in range(len(msg)):
         if (random.uniform(0,1) <= ber):
@@ -11,8 +18,10 @@ def flip_channel(msg : list, ber : float) -> list:
 
     return out_msg
 
-def erasure_channel(msg : list, ber : float) -> list:
+def erasure_channel(msg : list, snr : float) -> list:
     out_msg = []
+
+    ber = SNR2ber(snr)
 
     for i in range(len(msg)):
         if (random.uniform(0,1) <= ber):
