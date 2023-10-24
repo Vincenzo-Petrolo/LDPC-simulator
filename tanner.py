@@ -96,7 +96,7 @@ class Tanner(object):
             fig, ax = plt.subplots()
 
         def update(iteration, visual = None):
-            if (self.checkDone()):
+            if (self.checkDone() and iteration >= 1):
                 return
 
             # First phase: Update VNS
@@ -159,7 +159,6 @@ class Tanner(object):
         for cn in range(self.vns, self.cns + self.vns):
             if (not self.parityCheck(cn)):
                 return False
-
         return True
     
     def parityCheck(self, cn):

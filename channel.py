@@ -3,7 +3,7 @@ import math
 
 def SNR2ber(snr : float):
     # Higher SNR -> extremely low bit error rate
-    ber = 0.1-0.02*snr
+    ber = 1-0.75*snr
     return ber
 
 def flip_channel(msg : list, snr : float) -> list:

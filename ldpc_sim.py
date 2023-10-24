@@ -23,10 +23,10 @@ if __name__ == "__main__":
 
     vns = 6
     cns = 3
-    n_txs = 100
-    max_SNR_per_bit = 2
-    samples = 100
-    decoding_iteration = 200
+    n_txs = 1000
+    max_SNR_per_bit = 5
+    samples = 1000
+    decoding_iteration = 10
 
     T = Tanner(vns, cns, adjmatr_file="ldpc_adjmatr.txt")
 
