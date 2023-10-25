@@ -24,9 +24,9 @@ if __name__ == "__main__":
     vns = 6
     cns = 3
     n_txs = 1000
-    max_SNR_per_bit = 10
+    max_SNR_per_bit = 5
     samples = 100
-    decoding_iteration = 10
+    decoding_iteration = 50
 
     T1 = Tanner(vns, cns, adjmatr_file="h1.txt")
     T2 = Tanner(vns, cns, adjmatr_file="h2.txt")
@@ -50,22 +50,31 @@ if __name__ == "__main__":
 
         for _ in range(n_txs):
             # Generate new random message and let it through a noisy channel using BPSK modulation
-            codeword = codegen.Code("ldpc_adjmatr.txt").codeword()
-            channel_LLRs = c.erasure_channel(u.BPSK(codeword), snr)
+            codeword1 = codegen.Code("h1.txt").codeword()
+            channel_LLRs1 = c.erasure_channel(u.BPSK(codeword1), snr)
+            codeword2 = codegen.Code("h2.txt").codeword()
+            channel_LLRs2 = c.erasure_channel(u.BPSK(codeword2), snr)
+            codeword3 = codegen.Code("h3.txt").codeword()
+            channel_LLRs3 = c.erasure_channel(u.BPSK(codeword3), snr)
+            codeword4 = codegen.Code("h4.txt").codeword()
+            channel_LLRs4 = c.erasure_channel(u.BPSK(codeword4), snr)
             # Decode the received mssage
-            decoded1 = "".join(T1.decode(channel_LLRs, max_iterations=decoding_iteration, visual=False))
-            decoded2 = "".join(T2.decode(channel_LLRs, max_iterations=decoding_iteration, visual=False))
-            decoded3 = "".join(T3.decode(channel_LLRs, max_iterations=decoding_iteration, visual=False))
-            decoded4 = "".join(T4.decode(channel_LLRs, max_iterations=decoding_iteration, visual=False))
-            original = "".join([str(int(c)) for c in codeword])
+            decoded1 = "".join(T1.decode(channel_LLRs1, max_iterations=decoding_iteration, visual=False))
+            decoded2 = "".join(T2.decode(channel_LLRs2, max_iterations=decoding_iteration, visual=False))
+            decoded3 = "".join(T3.decode(channel_LLRs3, max_iterations=decoding_iteration, visual=False))
+            decoded4 = "".join(T4.decode(channel_LLRs4, max_iterations=decoding_iteration, visual=False))
+            original1 = "".join([str(int(c)) for c in codeword1])
+            original2 = "".join([str(int(c)) for c in codeword2])
+            original3 = "".join([str(int(c)) for c in codeword3])
+            original4 = "".join([str(int(c)) for c in codeword4])
 
-            errors = count_bit_differences(decoded1, original)
+            errors = count_bit_differences(decoded1, original1)
             wrong_bits1.append(errors)
-            errors = count_bit_differences(decoded2, original)
+            errors = count_bit_differences(decoded2, original2)
             wrong_bits2.append(errors)
-            errors = count_bit_differences(decoded3, original)
+            errors = count_bit_differences(decoded3, original3)
             wrong_bits3.append(errors)
-            errors = count_bit_differences(decoded4, original)
+            errors = count_bit_differences(decoded4, original4)
             wrong_bits4.append(errors)
 
         bar.update()
