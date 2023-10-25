@@ -33,7 +33,7 @@ def sign(vn_messages : list):
 
 class CheckNode(object):
     def __init__(self) -> None:
-        self.alpha = 0.9
+        self.alpha = 0.75
         pass
 
     
