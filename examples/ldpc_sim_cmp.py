@@ -23,8 +23,8 @@ if __name__ == "__main__":
 
     vns = 6
     cns = 3
-    n_txs = 500
-    max_SNR_per_bit = 2
+    n_txs = 1000
+    max_SNR_per_bit = 10
     samples = 100
     decoding_iteration = 10
 

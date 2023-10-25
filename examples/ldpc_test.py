@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # Generate new random message and let it through a noisy channel using BPSK modulation
     codeword = codegen.Code("ldpc_adjmatr.txt").codeword()
     print(f"Sent codeword: {codeword}")
-    channel_LLRs = c.erasure_channel(u.BPSK(codeword), snr=1.3)
+    channel_LLRs = c.erasure_channel(u.BPSK(codeword), snr=10)
     # Decode the received mssage
     decoded = T.decode(channel_LLRs, max_iterations=200, visual=True)
     print(f"Decoded codeword: {decoded}")
