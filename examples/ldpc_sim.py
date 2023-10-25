@@ -28,7 +28,7 @@ if __name__ == "__main__":
     samples = 100
     decoding_iteration = 10
 
-    T = Tanner(vns, cns, adjmatr_file="ldpc_adjmatr.txt")
+    T = Tanner(vns, cns, adjmatr_file="h1.txt")
 
     # Sweep on an uniform SNR
     SNRs = np.linspace(1, max_SNR_per_bit, num=samples)
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
         for _ in range(n_txs):
             # Generate new random message and let it through a noisy channel using BPSK modulation
-            codeword = codegen.Code("ldpc_adjmatr.txt").codeword()
+            codeword = codegen.Code("h1.txt").codeword()
             channel_LLRs = c.erasure_channel(u.BPSK(codeword), snr)
             # Decode the received mssage
             decoded = "".join(T.decode(channel_LLRs, max_iterations=decoding_iteration, visual=False))

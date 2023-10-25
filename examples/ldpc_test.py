@@ -12,9 +12,9 @@ if __name__ == "__main__":
     vns = 6
     cns = 3
 
-    T = Tanner(vns, cns, adjmatr_file="ldpc_adjmatr.txt")
+    T = Tanner(vns, cns, adjmatr_file="h1.txt")
     # Generate new random message and let it through a noisy channel using BPSK modulation
-    codeword = codegen.Code("ldpc_adjmatr.txt").codeword()
+    codeword = codegen.Code("h1.txt").codeword()
     print(f"Sent codeword: {codeword}")
     channel_LLRs = c.erasure_channel(u.BPSK(codeword), snr=10)
     # Decode the received mssage
