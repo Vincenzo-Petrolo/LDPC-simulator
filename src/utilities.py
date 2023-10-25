@@ -18,9 +18,13 @@ def BPSK(codeword : list) -> list:
     bpsk = []
 
     for c in codeword:
+        noise = abs(random.gauss(mu=0, sigma=0.1))
+
+        # print(f"Injecting noise {noise}")
+
         if (c == 1):
-            bpsk.append(-1)
+            bpsk.append(-1 + noise)
         else:
-            bpsk.append(1)
+            bpsk.append(1 + noise)
     
     return bpsk
